@@ -56,12 +56,17 @@ export function loadConfig(opts?: { requireKey?: boolean }): RelayerConfig {
   const pkRaw = process.env.RELAYER_PRIVATE_KEY?.trim() || "";
   let privateKey: Hex | null = null;
   if (pkRaw) {
-    if (!isHex(pkRaw) || pkRaw.length !== 66) {
-      throw new Error("RELAYER_PRIVATE_KEY must be a 32-byte hex string with 0x prefix");
+    const placeholder = /replace|your_|changeme|_key$/i.test(pkRaw) || pkRaw.includes("_");
+    if (placeholder || !isHex(pkRaw) || pkRaw.length !== 66) {
+      throw new Error(
+        "RELAYER_PRIVATE_KEY in .env must be a real 32-byte hex key (0x + 64 hex chars). Replace the placeholder.",
+      );
     }
     privateKey = pkRaw as Hex;
   } else if (requireKey) {
-    throw new Error("Missing required env: RELAYER_PRIVATE_KEY");
+    throw new Error(
+      "Missing RELAYER_PRIVATE_KEY. Set it in apps/relayer/.env (WBT-funded testnet key, never commit).",
+    );
   }
 
   return {

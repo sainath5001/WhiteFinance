@@ -1,8 +1,11 @@
+import { loadEnvFile } from "./load-env.js";
 import { loadConfig } from "./config.js";
 import { initClients } from "./clients.js";
 import { logger } from "./logger.js";
 import { startServer } from "./server.js";
 import { assertTokenCompatibility } from "./validate.js";
+
+loadEnvFile();
 
 async function main() {
   const cfg = loadConfig({ requireKey: true });
