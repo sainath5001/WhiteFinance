@@ -11,9 +11,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { WalletArea } from "@/components/shared/wallet-area";
+import { RelayerStatusBadge } from "@/components/shared/relayer-status";
 import { DEMO_ROLES, ROLE_LABEL, type DemoRole } from "@/lib/roles";
 import { useDemoRole } from "@/components/layout/role-provider";
-import { demoRelayer } from "@/lib/demo/fixtures";
 import { useRouter } from "next/navigation";
 import { ROLE_HOME } from "@/lib/roles";
 
@@ -31,9 +31,7 @@ export function Header({ onMenu }: { onMenu?: () => void }) {
         Whitechain Sepolia · 1874
       </Badge>
 
-      <Badge variant={demoRelayer.paused ? "danger" : "success"} className="hidden md:inline-flex">
-        Relayer {demoRelayer.paused ? "paused" : "ok"} · demo
-      </Badge>
+      <RelayerStatusBadge />
 
       <div className="ml-auto flex items-center gap-2">
         <Select

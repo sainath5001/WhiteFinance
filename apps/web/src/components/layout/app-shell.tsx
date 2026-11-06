@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { DemoBanner } from "@/components/shared/demo-banner";
+import { NetworkBanner } from "@/components/shared/network-banner";
 import { Header } from "@/components/layout/header";
 import { Sidebar } from "@/components/layout/sidebar";
 import { RoleProvider } from "@/components/layout/role-provider";
@@ -13,6 +14,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <RoleProvider>
       <div className="min-h-screen">
         <DemoBanner />
+        <NetworkBanner />
         <div className="flex min-h-[calc(100vh-37px)]">
           <div className="hidden lg:block">
             <Sidebar />

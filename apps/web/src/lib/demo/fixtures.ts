@@ -5,7 +5,7 @@
  */
 
 export const DEMO_BANNER =
-  "Demo UI · fixture data only · not live Whitechain reads · wallet/contract integration not enabled in this stage";
+  "WhiteFinance · chain is source of truth · role switcher is UI-only · never treat localStorage as payment proof";
 
 export const demoMerchant = {
   name: "Northwind Tools",

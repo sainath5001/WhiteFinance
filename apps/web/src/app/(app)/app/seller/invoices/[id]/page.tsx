@@ -2,73 +2,81 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { parseEventLogs } from "viem";
+import { useWriteContract } from "wagmi";
 import { PageHeader } from "@/components/shared/page-header";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { AddressText } from "@/components/shared/address";
 import { ErrorState } from "@/components/shared/error-state";
+import { WalletGate } from "@/components/shared/wallet-gate";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { getDemoInvoice, getDemoSellerFinancing } from "@/lib/demo/fixtures";
-import { formatUsdt } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
+import { contracts } from "@/lib/web3/contracts";
+import { usdtToBase, baseToUsdt } from "@/lib/web3/format";
+import { humanizeWeb3Error } from "@/lib/web3/errors";
+import { useInvoice } from "@/lib/web3/hooks/use-invoice";
+import { sellerFactoringPreview } from "@/lib/web3/accounting";
+import { waitSoftReceipt } from "@/lib/web3/tx";
+import { explorerTx } from "@/lib/config";
 
-const factorSchema = z
-  .object({
-    advanceUsdt: z.string().regex(/^\d+(\.\d{1,6})?$/),
-    discountUsdt: z.string().regex(/^\d+(\.\d{1,6})?$/),
-  })
-  .superRefine((v, ctx) => {
-    // preview only; live rule advance+discount==face enforced later
-    if (Number(v.advanceUsdt) <= 0) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Advance must be > 0", path: ["advanceUsdt"] });
-    }
-  });
+const factorSchema = z.object({
+  advanceUsdt: z.string().regex(/^\d+(\.\d{1,6})?$/),
+  discountUsdt: z.string().regex(/^\d+(\.\d{1,6})?$/),
+  fundingHours: z.string().regex(/^\d+$/),
+});
 
 export default function SellerInvoiceDetailPage() {
   const params = useParams<{ id: string }>();
-  const invoice = getDemoInvoice(params.id);
-  const financing = invoice?.sellerFinancingId
-    ? getDemoSellerFinancing(invoice.sellerFinancingId)
-    : null;
+  const { data: invoice, loading, error, refresh } = useInvoice(params.id);
+  const { writeContractAsync, isPending } = useWriteContract();
+  const [txMsg, setTxMsg] = useState<string | null>(null);
   const form = useForm<z.infer<typeof factorSchema>>({
     resolver: zodResolver(factorSchema),
-    defaultValues: {
-      advanceUsdt: invoice ? String(invoice.faceValueUsdt * 0.95) : "0",
-      discountUsdt: invoice ? String(invoice.faceValueUsdt * 0.05) : "0",
-    },
+    defaultValues: { advanceUsdt: "95000", discountUsdt: "5000", fundingHours: "72" },
   });
-  const advance = Number(form.watch("advanceUsdt") || 0);
-  const discount = Number(form.watch("discountUsdt") || 0);
 
-  if (!invoice) {
-    return <ErrorState title="Invoice not found" description="No demo fixture for this id." />;
+  if (loading) return <Skeleton className="h-64 w-full" />;
+  if (error || !invoice) {
+    return <ErrorState description={error || "Invoice not found"} onRetry={() => void refresh()} />;
   }
 
+  const face = BigInt(invoice.faceValueBase);
+  const advance = usdtToBase(form.watch("advanceUsdt") || "0");
+  const discount = usdtToBase(form.watch("discountUsdt") || "0");
+  const preview = sellerFactoringPreview(face, advance, discount);
   const steps = ["CREATED", "BUYER_CONFIRMED", "FINANCED", "SETTLED"];
   const stepIndex =
     invoice.status === "CREATED"
       ? 0
       : invoice.status === "BUYER_CONFIRMED"
-        ? financing
+        ? invoice.sellerFinancingId
           ? 2
           : 1
-        : invoice.status === "SETTLED"
+        : invoice.status === "SETTLED" || invoice.status === "PAID"
           ? 3
           : 1;
 
   return (
     <div className="animate-fade-in space-y-6">
       <PageHeader
-        title={invoice.number}
-        description={`Invoice #${invoice.id} · demo fixture`}
+        title={`Invoice #${invoice.invoiceId}`}
+        description="Onchain InvoiceRegistry state"
         actions={
-          <Button asChild variant="outline">
-            <Link href="/app/seller/financing">Seller financing</Link>
-          </Button>
+          <>
+            <Button variant="outline" size="sm" onClick={() => void refresh()}>
+              Refresh
+            </Button>
+            <Button asChild variant="outline">
+              <Link href="/app/seller/financing">Seller financing</Link>
+            </Button>
+          </>
         }
       />
 
@@ -77,7 +85,9 @@ export default function SellerInvoiceDetailPage() {
           <li
             key={s}
             className={`rounded-md border px-3 py-2 text-center text-xs ${
-              i <= stepIndex ? "border-primary/40 bg-primary/10 text-primary" : "border-border text-muted-foreground"
+              i <= stepIndex
+                ? "border-primary/40 bg-primary/10 text-primary"
+                : "border-border text-muted-foreground"
             }`}
           >
             {s}
@@ -93,7 +103,7 @@ export default function SellerInvoiceDetailPage() {
           <CardContent className="space-y-3 text-sm">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Face</span>
-              <span className="tabular font-semibold">{formatUsdt(invoice.faceValueUsdt, 0)}</span>
+              <span className="tabular font-semibold">{invoice.faceValueUsdt} USDT</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Status</span>
@@ -105,11 +115,16 @@ export default function SellerInvoiceDetailPage() {
             </div>
             <div>
               <div className="text-muted-foreground">Due</div>
-              {invoice.dueDate}
+              {new Date(invoice.dueDate * 1000).toLocaleString()}
             </div>
             <div>
               <div className="text-muted-foreground">Document hash</div>
               <div className="break-all font-mono text-[11px]">{invoice.documentHash}</div>
+              <p className="mt-1 text-xs text-muted-foreground">{invoice.authenticityNote}</p>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Outstanding to seller</span>
+              <span className="tabular">{baseToUsdt(invoice.outstandingToSellerBase)} USDT</span>
             </div>
           </CardContent>
         </Card>
@@ -118,50 +133,110 @@ export default function SellerInvoiceDetailPage() {
           <CardHeader>
             <CardTitle>Request seller factoring</CardTitle>
             <CardDescription>
-              Requires buyer confirmation. Not a guaranteed return for investors.
+              advance + discount must equal face. Not a guaranteed investor return.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {invoice.status !== "BUYER_CONFIRMED" ? (
-              <p className="text-sm text-muted-foreground">
-                Financing locked until buyer confirms.
-              </p>
-            ) : financing ? (
-              <div className="space-y-2 text-sm">
-                <StatusBadge status={financing.status} />
-                <p>
-                  Advance {formatUsdt(financing.advanceUsdt, 0)} · expected gross repayment{" "}
-                  {formatUsdt(financing.expectedGrossRepaymentUsdt, 0)}
+            <WalletGate>
+              {invoice.status !== "BUYER_CONFIRMED" && invoice.status !== "BUYERCONFIRMED" ? (
+                <p className="text-sm text-muted-foreground">
+                  Financing locked until buyer confirms onchain.
                 </p>
-                <Button asChild variant="outline" size="sm">
-                  <Link href={`/app/investor/seller/${financing.id}`}>View position</Link>
-                </Button>
-              </div>
-            ) : (
-              <form
-                className="space-y-3"
-                onSubmit={form.handleSubmit(() => {
-                  window.alert("Demo only: factoring request validated.");
-                })}
-              >
-                <div className="space-y-2">
-                  <Label>Advance (USDT)</Label>
-                  <Input className="tabular" {...form.register("advanceUsdt")} />
+              ) : invoice.sellerFinancingId ? (
+                <div className="space-y-2 text-sm">
+                  <p>Seller financing #{invoice.sellerFinancingId}</p>
+                  <Button asChild variant="outline" size="sm">
+                    <Link href={`/app/investor/seller/${invoice.sellerFinancingId}`}>
+                      View position
+                    </Link>
+                  </Button>
                 </div>
-                <div className="space-y-2">
-                  <Label>Discount (USDT)</Label>
-                  <Input className="tabular" {...form.register("discountUsdt")} />
-                </div>
-                <div className="rounded-md border border-border bg-muted/30 p-3 text-xs">
-                  Investor expected gross repayment (face): {formatUsdt(advance + discount, 0)}
-                  <br />
-                  Investor profit if repaid (discount): {formatUsdt(discount, 0)}
-                  <br />
-                  Not a guaranteed return.
-                </div>
-                <Button type="submit">Validate financing request</Button>
-              </form>
-            )}
+              ) : (
+                <form
+                  className="space-y-3"
+                  onSubmit={form.handleSubmit(async (values) => {
+                    setTxMsg(null);
+                    try {
+                      const adv = usdtToBase(values.advanceUsdt);
+                      const disc = usdtToBase(values.discountUsdt);
+                      if (adv + disc !== face) {
+                        throw new Error(
+                          `advance + discount must equal face (${invoice.faceValueUsdt} USDT)`,
+                        );
+                      }
+                      const deadline =
+                        BigInt(Math.floor(Date.now() / 1000)) +
+                        BigInt(Number(values.fundingHours) * 3600);
+                      const hash = await writeContractAsync({
+                        address: contracts.sellerFinancing.address,
+                        abi: contracts.sellerFinancing.abi,
+                        functionName: "requestFinancing",
+                        args: [BigInt(invoice.invoiceId), adv, disc, deadline],
+                      });
+                      const receipt = await waitSoftReceipt(hash);
+                      const logs = parseEventLogs({
+                        abi: contracts.sellerFinancing.abi,
+                        logs: receipt.logs,
+                        eventName: "FinancingRequested",
+                      });
+                      const financingId = (
+                        logs[0]?.args as { financingId?: bigint } | undefined
+                      )?.financingId;
+                      setTxMsg(
+                        financingId != null
+                          ? `Created financing #${financingId.toString()} · ${hash}`
+                          : `Submitted · ${hash}`,
+                      );
+                      await refresh();
+                    } catch (err) {
+                      setTxMsg(humanizeWeb3Error(err));
+                    }
+                  })}
+                >
+                  <div className="space-y-2">
+                    <Label>Advance (USDT)</Label>
+                    <Input className="tabular" {...form.register("advanceUsdt")} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Discount (USDT)</Label>
+                    <Input className="tabular" {...form.register("discountUsdt")} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Funding window (hours)</Label>
+                    <Input className="tabular" {...form.register("fundingHours")} />
+                  </div>
+                  <div className="rounded-md border border-border bg-muted/30 p-3 text-xs">
+                    Investor expected gross repayment (face): {baseToUsdt(preview.expectedGrossRepaymentToInvestor)}{" "}
+                    USDT
+                    <br />
+                    Investor profit if repaid (discount): {baseToUsdt(preview.investorProfitIfRepaid)} USDT
+                    <br />
+                    Invariant OK: {preview.invariantOk ? "yes" : "no"}
+                    <br />
+                    {preview.disclaimer}
+                  </div>
+                  <Button type="submit" disabled={isPending || !preview.invariantOk}>
+                    Request financing onchain
+                  </Button>
+                </form>
+              )}
+              {txMsg ? (
+                <p className="mt-3 break-all text-xs text-muted-foreground">
+                  {txMsg.startsWith("0x") || txMsg.includes("0x") ? (
+                    <a
+                      className="underline"
+                      href={explorerTx((txMsg.match(/0x[a-fA-F0-9]{64}/)?.[0] || "0x") as `0x${string}`)}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      {txMsg}
+                    </a>
+                  ) : (
+                    txMsg
+                  )}
+                </p>
+              ) : null}
+            </WalletGate>
           </CardContent>
         </Card>
       </div>

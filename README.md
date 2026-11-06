@@ -2,7 +2,7 @@
 
 Business finance on [Whitechain](https://whitechain.io): stablecoin checkout, invoice financing, and gasless USDT payments.
 
-**Status: contracts deployed on Whitechain Sepolia. Backend API, EIP-3009 relayer, and frontend UI (demo fixtures) are implemented. Live wallet/contract wiring and gasless testnet settlement proof are not done.**
+**Status: contracts deployed on Whitechain Sepolia. Backend API, EIP-3009 relayer, and frontend are wired to live chain/API reads and wallet writes (wagmi + Reown AppKit). Funded gasless/testnet E2E settlement proof was not executed in the integration pass — see [docs/integration-completion-report.md](docs/integration-completion-report.md).**
 
 ## What it is, in simple language
 
@@ -31,6 +31,7 @@ A regular payment rail cannot give the investor an onchain, exclusive repayment 
 | [docs/backend.md](docs/backend.md) | Backend API + indexer completion report |
 | [docs/relayer.md](docs/relayer.md) | EIP-3009 gasless relayer completion report |
 | [docs/frontend.md](docs/frontend.md) | Frontend UI completion report |
+| [docs/integration-completion-report.md](docs/integration-completion-report.md) | Live wallet/checkout/financing integration report |
 | [docs/frontend-specification.md](docs/frontend-specification.md) | Pages, states, UI rules |
 | [docs/development-roadmap.md](docs/development-roadmap.md) | Exact implementation order |
 | [docs/whitechain-compatibility.md](docs/whitechain-compatibility.md) | What was verified onchain and in official docs |
