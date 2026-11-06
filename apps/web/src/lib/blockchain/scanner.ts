@@ -1,7 +1,6 @@
 import {
   type Abi,
   type Address,
-  type GetContractEventsReturnType,
   type Hex,
   type Log,
   decodeEventLog,
@@ -81,9 +80,11 @@ export async function scanContractEvents(params: {
       }),
     );
 
-    for (const log of logs as GetContractEventsReturnType) {
+    for (const log of logs as Array<
+      Log & { args?: Record<string, unknown>; removed?: boolean }
+    >) {
       if (log.removed) continue;
-      const id = eventIdFromLog(config.chainId, log as Log);
+      const id = eventIdFromLog(config.chainId, log);
       out.push({
         id,
         chainId: config.chainId,

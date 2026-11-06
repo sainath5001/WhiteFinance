@@ -1,0 +1,56 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 220 16% 6%;
+    --foreground: 40 10% 94%;
+    --card: 220 14% 9%;
+    --card-foreground: 40 10% 94%;
+    --primary: 24 92% 52%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 12% 14%;
+    --secondary-foreground: 40 8% 88%;
+    --muted: 220 12% 12%;
+    --muted-foreground: 220 8% 58%;
+    --accent: 220 12% 16%;
+    --accent-foreground: 40 10% 94%;
+    --destructive: 0 72% 48%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 152 45% 38%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 8%;
+    --border: 220 12% 18%;
+    --input: 220 12% 18%;
+    --ring: 24 92% 52%;
+    --radius: 0.5rem;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    @apply antialiased;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans;
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -20%, hsl(24 40% 18% / 0.18), transparent),
+      linear-gradient(180deg, hsl(220 16% 7%), hsl(220 16% 5%));
+    min-height: 100vh;
+  }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+}
+
+@layer utilities {
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}

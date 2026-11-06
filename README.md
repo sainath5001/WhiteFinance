@@ -2,7 +2,7 @@
 
 Business finance on [Whitechain](https://whitechain.io): stablecoin checkout, invoice financing, and gasless USDT payments.
 
-**Status: contracts deployed on Whitechain Sepolia. Backend API + EIP-3009 relayer worker implemented (no database). Frontend and production deploy are not started. Live gasless testnet settlement not yet proven.**
+**Status: contracts deployed on Whitechain Sepolia. Backend API, EIP-3009 relayer, and frontend UI (demo fixtures) are implemented. Live wallet/contract wiring and gasless testnet settlement proof are not done.**
 
 ## What it is, in simple language
 
@@ -30,6 +30,7 @@ A regular payment rail cannot give the investor an onchain, exclusive repayment 
 | [docs/api-specification.md](docs/api-specification.md) | APIs, relayer, webhooks, env vars |
 | [docs/backend.md](docs/backend.md) | Backend API + indexer completion report |
 | [docs/relayer.md](docs/relayer.md) | EIP-3009 gasless relayer completion report |
+| [docs/frontend.md](docs/frontend.md) | Frontend UI completion report |
 | [docs/frontend-specification.md](docs/frontend-specification.md) | Pages, states, UI rules |
 | [docs/development-roadmap.md](docs/development-roadmap.md) | Exact implementation order |
 | [docs/whitechain-compatibility.md](docs/whitechain-compatibility.md) | What was verified onchain and in official docs |
@@ -167,7 +168,7 @@ Detail: [docs/development-roadmap.md](docs/development-roadmap.md).
 
 ## Current limitations
 
-- Frontend is not implemented.
+- Frontend UI uses demo fixtures; live wallet/API/relayer wiring is not enabled (see [docs/frontend.md](docs/frontend.md)).
 - Live gasless USDT settlement on testnet is not claimed until a funded E2E receipt exists (see [docs/relayer.md](docs/relayer.md)).
 - Database-free MVP cannot offer durable webhooks or full-history analytics.
 - Backend lives in `apps/web` — see [docs/backend.md](docs/backend.md).

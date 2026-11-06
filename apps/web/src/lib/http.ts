@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { ZodError, type ZodSchema } from "zod";
+import { z, ZodError, type ZodTypeAny } from "zod";
 import { config } from "./config";
 import { ApiError, toErrorBody } from "./errors";
 import { logger } from "./logger";
@@ -35,7 +35,10 @@ export function options(req: Request) {
   return new NextResponse(null, { status: 204, headers: corsHeaders(req) });
 }
 
-export async function parseJson<T>(req: Request, schema: ZodSchema<T>): Promise<T> {
+export async function parseJson<T extends ZodTypeAny>(
+  req: Request,
+  schema: T,
+): Promise<z.infer<T>> {
   let body: unknown;
   try {
     body = await req.json();
@@ -54,7 +57,7 @@ export async function parseJson<T>(req: Request, schema: ZodSchema<T>): Promise<
   }
 }
 
-export function parseQuery<T>(req: Request, schema: ZodSchema<T>): T {
+export function parseQuery<T extends ZodTypeAny>(req: Request, schema: T): z.infer<T> {
   const url = new URL(req.url);
   const obj: Record<string, string> = {};
   url.searchParams.forEach((v, k) => {
