@@ -80,7 +80,7 @@ export const config = {
     gaslessCheckout: true,
     escrowVault: true,
     transferPolicy: false,
-    relayer: false,
+    relayer: Boolean(process.env.RELAYER_URL?.trim()),
   },
 } as const;
 

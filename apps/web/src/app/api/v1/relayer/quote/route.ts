@@ -1,12 +1,16 @@
 import { handle, options, parseJson } from "@/lib/http";
-import { idOnlySchema } from "@/lib/schemas";
+import { z } from "zod";
+import { addressSchema } from "@/lib/schemas";
+import { proxyRelayer, relayerEnabled } from "@/lib/services/relayer-proxy";
+import { ApiError } from "@/lib/errors";
 import { config } from "@/lib/config";
-import { getPaymentIntent } from "@/lib/services/payments";
 
-/**
- * Relayer quote stub. Full gasless worker is out of scope for this backend pass.
- * Returns typed-data shape hints when the intent is payable; submit remains unavailable.
- */
+const schema = z.object({
+  intentId: z.string().regex(/^\d+$/),
+  id: z.string().regex(/^\d+$/).optional(),
+  payer: addressSchema.optional().nullable(),
+});
+
 export function OPTIONS(req: Request) {
   return options(req);
 }
@@ -15,27 +19,30 @@ export function POST(req: Request) {
   return handle(
     req,
     async () => {
-      const body = await parseJson(req, idOnlySchema);
-      const intent = await getPaymentIntent(body.id);
-      const available = Boolean(config.relayerUrl) && config.features.relayer;
-      return {
-        available,
-        pauseReason: available ? null : "RELAYER_NOT_DEPLOYED",
-        intentId: intent.intentId,
-        amountBase: intent.amountBase,
-        token: intent.token,
-        paymentProcessor: config.contracts.paymentProcessor,
-        typedDataHint: {
-          domain: {
-            name: "Tether USD",
-            version: "1",
-            chainId: config.chainId,
-            verifyingContract: config.usdt,
+      if (!relayerEnabled()) {
+        throw new ApiError(
+          "RELAYER_UNAVAILABLE",
+          "Start apps/relayer and set RELAYER_URL. Gasful pay remains available.",
+          {
+            paymentProcessor: config.contracts.paymentProcessor,
           },
-          primaryType: "ReceiveWithAuthorization",
-          note: "Full EIP-712 message is built by the relayer worker (out of scope).",
-        },
-      };
+        );
+      }
+      const body = await parseJson(req, schema);
+      const intentId = body.intentId || body.id!;
+      const proxied = await proxyRelayer("/quote", {
+        method: "POST",
+        body: JSON.stringify({ intentId, payer: body.payer ?? null }),
+      });
+      if (proxied.status >= 400) {
+        const err = proxied.body as { error?: { code?: string; message?: string; details?: object } };
+        throw new ApiError(
+          (err.error?.code as never) || "RELAYER_UNAVAILABLE",
+          err.error?.message || "Relayer quote failed",
+          (err.error?.details as Record<string, unknown>) || {},
+        );
+      }
+      return proxied.body;
     },
     "write",
   );
