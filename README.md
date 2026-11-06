@@ -2,7 +2,7 @@
 
 Business finance on [Whitechain](https://whitechain.io): stablecoin checkout, invoice financing, and gasless USDT payments.
 
-**Status: smart contract layer implemented. Backend and frontend are not started. Contracts are not deployed.**
+**Status: contracts deployed on Whitechain Sepolia. Backend API + blockchain reader implemented (no database). Relayer, frontend, and production deploy are not started.**
 
 ## What it is, in simple language
 
@@ -28,6 +28,7 @@ A regular payment rail cannot give the investor an onchain, exclusive repayment 
 | [docs/business-logic.md](docs/business-logic.md) | Journeys, accounting, state machines, legal vs technical |
 | [docs/security-model.md](docs/security-model.md) | Roles, invariants, relayer threats, tests |
 | [docs/api-specification.md](docs/api-specification.md) | APIs, relayer, webhooks, env vars |
+| [docs/backend.md](docs/backend.md) | Backend API + indexer completion report |
 | [docs/frontend-specification.md](docs/frontend-specification.md) | Pages, states, UI rules |
 | [docs/development-roadmap.md](docs/development-roadmap.md) | Exact implementation order |
 | [docs/whitechain-compatibility.md](docs/whitechain-compatibility.md) | What was verified onchain and in official docs |
@@ -165,9 +166,9 @@ Detail: [docs/development-roadmap.md](docs/development-roadmap.md).
 
 ## Current limitations
 
-- Backend and frontend are not implemented.
-- Contracts are not deployed.
+- Frontend and relayer worker are not implemented.
 - Database-free MVP cannot offer durable webhooks or full-history analytics.
+- Backend lives in `apps/web` — see [docs/backend.md](docs/backend.md).
 - Reown embedded wallets / email login are not supported on Whitechain.
 - Scale removes WBT for checkout only, not for financing.
 - Legal enforceability of invoices is out of scope.
