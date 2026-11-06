@@ -187,11 +187,11 @@ Cross-platform duplicate financing of the same real-world invoice **cannot** be 
 
 ## 9. Escrow accounting
 
-v1 proposed: no shared vault.
+v1 includes `EscrowVault` for Tokenize flows only (required by the contract implementation brief). Operate checkout does not use it.
 
-If a function would leave USDT on a WhiteFinance contract, it is a bug except during a transaction. Tests assert zero residual balance.
+Each vault account has a fixed depositor and beneficiary. Only the opening operator can deposit, release, or refund. Admin cannot withdraw. `totalHeld` is the accounting invariant against `balanceOf(vault)`.
 
-If dispute holding is later approved, each financing id gets `held[id]` and release functions; admin still cannot choose an arbitrary `to` except the recorded investor or recorded payer.
+Operate still requires a zero residual `PaymentProcessor` USDT balance after every successful transaction.
 
 ## 10. Pause and recovery
 

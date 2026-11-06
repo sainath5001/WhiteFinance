@@ -1,0 +1,6 @@
+.env
+contracts/cache/
+contracts/out/
+contracts/broadcast/
+.idea/
+.vscode/

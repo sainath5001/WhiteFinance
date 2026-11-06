@@ -132,10 +132,10 @@ No stack substitution is required by the compatibility review. Constraints on ho
 | `SellerFinancing.sol` | **Keep** | Seller-side factoring state machine and accounting. |
 | `BuyerFinancing.sol` | **Keep** | Buyer-side financing; separate accounting so 30,000 USDT cannot be double-counted. |
 | `PaymentProcessor.sol` | **Keep** | Intents, settlement, receipts, refunds, gasless settle. |
-| `EscrowVault.sol` | **Omit in v1** | One-investor, all-or-nothing funding settles immediately. A shared vault would add a withdrawal surface without a v1 custody need. Financing contracts may hold USDT only if a repayment arrives during `DISPUTED`; that is local accounting, not a global vault. |
+| `EscrowVault.sol` | **Keep (implementation brief)** | Financing USDT custody with fixed beneficiaries, double-release protection, and no admin withdrawal. Operate checkout does not use the vault. |
 | `TransferPolicy.sol` | **Omit in v1** | Prize USDT already has a blocklist. Financing positions are non-transferable. No ERC-721/1155. Transfer restrictions live in the financing contracts. |
 
-Omitting `EscrowVault` and `TransferPolicy` is a **proposed default pending approval**. If delayed release, multi-investor funding, or transferable notes are required, revisit both.
+The architecture originally proposed omitting `EscrowVault`. The smart-contract implementation brief required it, so v1 includes it for Tokenize flows only. `TransferPolicy` stays omitted. See `docs/contracts.md`.
 
 ### 6.2 Responsibilities
 

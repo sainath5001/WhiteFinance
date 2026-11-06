@@ -8,7 +8,7 @@ This is the exact proposed implementation order.
 
 - Prize USDT only: `0xcedfB56113143d55b2358b8CFbB0dEB5Ad2f55a7`
 - No database
-- No EscrowVault / TransferPolicy unless approval changes that
+- EscrowVault included (implementation brief). TransferPolicy omitted.
 - No ERC-721 / ERC-1155
 - No relayer key in the browser
 - Foundry on Windows via WSL
@@ -131,7 +131,7 @@ Tracks to show in the video:
 ## What not to do in any phase
 
 - Do not add a database “just for webhooks”
-- Do not implement `EscrowVault` or `TransferPolicy` without approval
+- Do not implement `TransferPolicy` without a new approval
 - Do not enable Reown email/social
 - Do not use USDT.e
 - Do not ship a transfer button as checkout

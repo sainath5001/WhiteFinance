@@ -2,9 +2,7 @@
 
 Business finance on [Whitechain](https://whitechain.io): stablecoin checkout, invoice financing, and gasless USDT payments.
 
-**Status: architecture complete. Implementation has not started. Waiting for approval of the design and the open decisions below.**
-
-This repository currently contains documentation only. There is no Solidity, no Next.js app, no relayer, and no deployment.
+**Status: smart contract layer implemented. Backend and frontend are not started. Contracts are not deployed.**
 
 ## What it is, in simple language
 
@@ -83,8 +81,8 @@ flowchart LR
 | `InvoiceRegistry` | Invoice facts, hashes, buyer confirmation, uniqueness |
 | `SellerFinancing` | Factoring lifecycle |
 | `BuyerFinancing` | Buyer-side financing lifecycle |
-| `EscrowVault` | **Omit in v1** (pending approval) |
-| `TransferPolicy` | **Omit in v1** (pending approval) |
+| `EscrowVault` | Financing custody; no admin withdraw |
+| `TransferPolicy` | Omitted |
 
 ### Backend
 
@@ -167,12 +165,14 @@ Detail: [docs/development-roadmap.md](docs/development-roadmap.md).
 
 ## Current limitations
 
-- Not implemented.
+- Backend and frontend are not implemented.
+- Contracts are not deployed.
 - Database-free MVP cannot offer durable webhooks or full-history analytics.
 - Reown embedded wallets / email login are not supported on Whitechain.
 - Scale removes WBT for checkout only, not for financing.
 - Legal enforceability of invoices is out of scope.
 - Test WBT and test USDT have no monetary value.
+- Stray USDT sent directly to `PaymentProcessor` or `EscrowVault` cannot be swept (no admin withdraw).
 
 ## License
 
