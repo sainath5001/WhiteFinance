@@ -49,7 +49,7 @@ export function ensureAppKit() {
       socials: false,
       analytics: false,
     },
-    themeMode: "dark",
+    themeMode: "light",
   });
   appKitInitialized = true;
 }
