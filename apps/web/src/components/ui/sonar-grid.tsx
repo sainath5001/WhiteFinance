@@ -3,7 +3,8 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
-export interface SonarGridProps extends React.ComponentProps<"div"> {
+export interface SonarGridProps extends Omit<React.ComponentProps<"div">, "ref"> {
+  ref?: React.Ref<HTMLDivElement>;
   /** Distance between dots in CSS pixels. */
   spacing?: number;
   /** Dot radius at rest, in CSS pixels. */
@@ -96,8 +97,11 @@ export function SonarGrid({
   const setHost = React.useCallback(
     (node: HTMLDivElement | null) => {
       hostRef.current = node;
-      if (typeof ref === "function") ref(node);
-      else if (ref) ref.current = node;
+      if (typeof ref === "function") {
+        ref(node);
+      } else if (ref && typeof ref === "object" && "current" in ref) {
+        (ref as React.MutableRefObject<HTMLDivElement | null>).current = node;
+      }
     },
     [ref],
   );
