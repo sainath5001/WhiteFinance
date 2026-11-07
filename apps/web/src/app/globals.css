@@ -4,18 +4,18 @@
 
 @layer base {
   :root {
-    /* Whitechain-inspired: clean white field, near-black type, green signal accent */
+    /* Whitechain-inspired: clean white field, near-black type, sky-blue accent */
     --background: 0 0% 100%;
     --foreground: 222 28% 8%;
     --card: 0 0% 100%;
     --card-foreground: 222 28% 8%;
-    --primary: 158 78% 32%;
+    --primary: 199 92% 48%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 210 18% 96%;
+    --secondary: 204 40% 96%;
     --secondary-foreground: 222 28% 12%;
     --muted: 210 16% 96%;
     --muted-foreground: 215 12% 42%;
-    --accent: 210 18% 95%;
+    --accent: 204 45% 95%;
     --accent-foreground: 222 28% 10%;
     --destructive: 0 72% 48%;
     --destructive-foreground: 0 0% 100%;
@@ -23,9 +23,9 @@
     --success-foreground: 0 0% 100%;
     --warning: 38 92% 44%;
     --warning-foreground: 0 0% 8%;
-    --border: 214 16% 88%;
-    --input: 214 16% 88%;
-    --ring: 158 78% 32%;
+    --border: 210 20% 88%;
+    --input: 210 20% 88%;
+    --ring: 199 92% 48%;
     --radius: 0.5rem;
   }
 
@@ -40,9 +40,9 @@
   body {
     @apply bg-background text-foreground font-sans;
     background-image:
-      radial-gradient(ellipse 70% 45% at 80% -10%, hsl(158 40% 88% / 0.45), transparent 55%),
-      radial-gradient(ellipse 55% 40% at 10% 0%, hsl(210 40% 94% / 0.8), transparent 50%),
-      linear-gradient(180deg, hsl(0 0% 100%), hsl(210 20% 98%));
+      radial-gradient(ellipse 70% 45% at 80% -10%, hsl(199 80% 90% / 0.55), transparent 55%),
+      radial-gradient(ellipse 55% 40% at 10% 0%, hsl(210 50% 95% / 0.85), transparent 50%),
+      linear-gradient(180deg, hsl(0 0% 100%), hsl(210 30% 98%));
     min-height: 100vh;
   }
 
